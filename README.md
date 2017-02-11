@@ -4,7 +4,7 @@
 
 ## 运行截图
 
-![](http://github.com/leetking/mine/README.assets/screenshot.png)
+![](https://github.com/leetking/mine/blob/master/README.assets/screenshot.png)
 
 ## 致谢
 
