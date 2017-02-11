@@ -1,0 +1,10 @@
+#.gitignore
+*.o
+*.d
+*.swp
+*~
+core
+mine
+test-v*
+obsolete/
+build/
