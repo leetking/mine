@@ -2,6 +2,10 @@
 
 使用SDL2开发
 
+## 运行截图
+
+![](http://github.com/leetking/mine/README.assets/screenshot.png)
+
 ## 致谢
 
 - 感谢lazy foo的SDL2[教程](http://lazyfoo.net/tutorials/SDL/index.php)

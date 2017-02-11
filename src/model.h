@@ -18,7 +18,8 @@ mark_t map_mark(map_t *map, int row, int col);
 /*
  * 打开这个没有开的格子，查看是否有雷
  * @reutrn: 0: 没有雷
- *         !0: 有雷
+ *          1: 游戏胜利
+ *         -1: 有雷
  */
 int map_open(map_t *map, int row, int col);
 /*
