@@ -163,7 +163,7 @@ void map_destroy(map_t *map)
 {
     if (!map) return;
     int i;
-    for (i = 0; i < map->w; ++i) {
+    for (i = 0; i < map->h; ++i) {
         free(map->grids[i]);
     }
     free(map->grids);
