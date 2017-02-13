@@ -4,7 +4,11 @@
 
 ## 运行截图
 
-![](README.assets/screenshot.png)
+![marks](README.assets/makrs.png)
+
+![lose](README.assets/makrs_lose.png)
+
+![win](README.assets/win.png)
 
 ## 致谢
 

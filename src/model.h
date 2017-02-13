@@ -4,9 +4,12 @@
 typedef struct map_t map_t;
 typedef struct agrid_t agrid_t;
 typedef enum mark_t {
-    MARK_EMPTY,
+    MARK_EMPTY = 0,
     MARK_FLAG,
     MARK_MAYBE,
+    MARK_MINE,
+    MARK_EXPLOAED,
+    MARK_INCORRECT,
 } mark_t;
 
 map_t *map_create(int w, int h, int nmine);

@@ -70,10 +70,15 @@ map_t *map_create(int w, int h, int nmine)
     return map;
 }
 /*
- * 切换标记
+ * 按MARK_EMPTY(0)、MARK_FLAG(1)和MARK_MAYBE(2)顺序切换这三个标记
  * @return: 返回切换后的标记
  */
-mark_t map_mark(map_t *map, int row, int col);
+mark_t map_mark(map_t *map, int row, int col)
+{
+    map->grids[row][col].mark += 1;
+    map->grids[row][col].mark %= 3;
+    return map->grids[row][col].mark;
+}
 /*
  * 打开这个没有开的格子，查看是否有雷
  * @reutrn: 0: 没有雷
@@ -82,17 +87,56 @@ mark_t map_mark(map_t *map, int row, int col);
  */
 int map_open(map_t *map, int row, int col)
 {
-    if (map->grids[row][col].is_open) return 0;
-    map->grids[row][col].is_open = 1;
-    if (map->grids[row][col].has_mine) return -1;
-    --map->closedgrids;
-    if (map->nmine == map->closedgrids) return 1;
+    agrid_t *grid = &map->grids[row][col];
+    if (grid->is_open) return 0;
+    /* 游戏失败 */
+    if (grid->has_mine) {
+        /* 当前触发的地雷 */
+        grid->mark = MARK_EXPLOAED;
+        int row, col;
+        for (row = 0; row < map->h; ++row) {
+            for (col = 0; col < map->w; ++col) {
+                agrid_t *grid = &map->grids[row][col];
+                /* 处理标记逻辑 */
+                if (!grid->is_open) {
+                    grid->mark = (grid->has_mine && (grid->mark == MARK_EMPTY)) ? MARK_MINE : grid->mark;
+                    switch (grid->mark) {
+                    case MARK_FLAG:
+                        grid->mark = (grid->has_mine) ? MARK_FLAG : MARK_INCORRECT;
+                        break;
+                    case MARK_MAYBE:
+                        grid->mark = (grid->has_mine) ? MARK_FLAG : MARK_MAYBE;
+                        break;
+                    default: break;
+                    }
+                }
+            }
+        }
+        return -1;
+    }
 
-    if (0 != map->grids[row][col].nmine) return 0;
+    /* 没有地雷，正常打开这个格子 */
+    grid->is_open = 1;
+    --map->closedgrids;
+    /* 游戏胜利 */
+    if (map->nmine == map->closedgrids) {
+        int row, col;
+        agrid_t *grid;
+        for (row = 0; row < map->h; ++row) {
+            for (col = 0; col < map->w; ++col) {
+                grid = &map->grids[row][col];
+                if (!grid->is_open) {
+                    grid->mark = MARK_FLAG;
+                }
+            }
+        }
+        return 1;
+    }
+    if (0 != grid->nmine) return 0;
 
     /* 这个格子没有雷且周围没有雷，那么尝试展开地图 */
 #define IS_IN_MAP(row, col)    (((0 <= (row)) && (row) < map->h) \
-    && ((0 <= (col)) && (col) < map->w))
+        && ((0 <= (col)) && (col) < map->w))
     char direction[8][2] = {
         {-1, -1}, {-1,  0}, {-1, +1}, { 0, -1},
         { 0, +1}, {+1, -1}, {+1,  0}, {+1, +1},

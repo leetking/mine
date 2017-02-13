@@ -13,8 +13,8 @@ VERSION := v0.0.1
 
 APP := $(PROGRAME)-$(VERSION)
 
-CFLAGS := -DVERSION=\"$(VERSION)\" -MMD -MP
-LDFLAGS := -lSDL2 -lSDL2_image
+CFLAGS := -DVERSION=\"$(VERSION)\" -MMD -MP `sdl2-config --cflags`
+LDFLAGS := `sdl2-config --libs` -lSDL2_image -lSDL2_ttf
 
 CFLAGS_WIN := -DWINDOWS
 LDFLAGS_WIN :=

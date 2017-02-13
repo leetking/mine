@@ -1,5 +1,5 @@
 #include "timer.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #undef NOTNULL
 #define NOTNULL(x) do { if (!(x)) return; } while (0)
