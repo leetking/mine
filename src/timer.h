@@ -39,5 +39,6 @@ struct Timer {
     char isstart, ispause;
     int startticks, pauseticks;
 };
+#define TIMER_INIT  {0, 0, 0, 0}
 
 #endif

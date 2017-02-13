@@ -102,10 +102,8 @@ int map_open(map_t *map, int row, int col)
                     grid->mark = (grid->has_mine && (grid->mark == MARK_EMPTY)) ? MARK_MINE : grid->mark;
                     switch (grid->mark) {
                     case MARK_FLAG:
-                        grid->mark = (grid->has_mine) ? MARK_FLAG : MARK_INCORRECT;
-                        break;
                     case MARK_MAYBE:
-                        grid->mark = (grid->has_mine) ? MARK_FLAG : MARK_MAYBE;
+                        grid->mark = (grid->has_mine) ? MARK_FLAG : MARK_INCORRECT;
                         break;
                     default: break;
                     }

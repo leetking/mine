@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #include "../src/timer.h"
 #include "../src/model.h"
@@ -48,7 +48,7 @@ static int test_pass = 0;
 static void test_timer(void)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
-    Timer t;
+    Timer t = TIMER_INIT;
     int ticks;
     TEST_FALSE(Timer_isstart(&t));
     Timer_start(&t);
