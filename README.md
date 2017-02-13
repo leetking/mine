@@ -4,9 +4,9 @@
 
 ## 运行截图
 
-![marks](README.assets/makrs.png)
+![marks](README.assets/marks.png)
 
-![lose](README.assets/makrs_lose.png)
+![lose](README.assets/marks_lose.png)
 
 ![win](README.assets/win.png)
 
