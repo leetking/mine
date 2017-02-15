@@ -37,8 +37,8 @@ map_t *map_create(int w, int h, int nmine)
             agrid_t g;
             int row, col;
             g = map->grids[i][j];
-            row = rand() % (map->w);
-            col = rand() % (map->h);
+            row = rand() % (map->h);
+            col = rand() % (map->w);
             map->grids[i][j] = map->grids[row][col];
             map->grids[row][col] = g;
         }
