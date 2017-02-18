@@ -1,5 +1,2 @@
 1. 添加失败和胜利重新开始
-2.1. 学习gradle管理android项目，以及添加jni并且把此项目编译一个apk包
-2.2. 添加触屏操作
-3. 应对不同分辨率的屏幕（主要源于考虑android设备）
-4. 根据sprites.info来分割sprites.png
+2. 根据sprites.info来分割sprites.png

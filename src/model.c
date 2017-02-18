@@ -135,7 +135,7 @@ int map_open(map_t *map, int row, int col)
     /* 这个格子没有雷且周围没有雷，那么尝试展开地图 */
 #define IS_IN_MAP(row, col)    (((0 <= (row)) && (row) < map->h) \
         && ((0 <= (col)) && (col) < map->w))
-    char direction[8][2] = {
+    signed char direction[8][2] = {
         {-1, -1}, {-1,  0}, {-1, +1}, { 0, -1},
         { 0, +1}, {+1, -1}, {+1,  0}, {+1, +1},
     };

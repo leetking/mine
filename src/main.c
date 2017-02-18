@@ -11,18 +11,20 @@
 #define WNGRIDS     10
 #define HNGRIDS     10
 #define NMINES      10
-#define AGRID_EDGE  40
-#define PADDING     10
-#define WIDTH       (2*PADDING+(WNGRIDS-1)*(AGRID_EDGE+LINE_WIDTH)+AGRID_EDGE)
-#define HEIGHT      (2*PADDING+(HNGRIDS-1)*(AGRID_EDGE+LINE_WIDTH)+AGRID_EDGE)
-#define LINE_WIDTH  5
 #define FPS         (60)
-
-#define FORMAT_MAX  (512)
+/* 这些根据屏幕分辨率调整 */
+static int AGRID_EDGE   = 40;
+static int WIDTH;
+static int HEIGHT;
+static int LINE_WIDTH   = 5;
+static int PADDING      = 10;
 
 #define TITLE   "扫雷 "VERSION
 
+#define FORMAT_MAX  (1024)
+
 #define MAX(x, y)   ((x)>(y)?(x):(y))
+#define MIN(x, y)   ((x)>(y)?(y):(x))
 
 static SDL_Window *win;
 static SDL_Renderer *renderer;
@@ -89,20 +91,20 @@ int main(int argc, char **argv)
 
 static void Error(char const *format, ...)
 {
-    char tmp[FORMAT_MAX];
-    snprintf(tmp, FORMAT_MAX, "Error: %s", format);
     va_list vars;
     va_start(vars, format);
-    vprintf(tmp, vars);
+    char buf[FORMAT_MAX];
+    vsprintf(buf, format, vars);
+    SDL_Log("Error: %s", buf);
     va_end(vars);
 }
 static void Warn(char const *format, ...)
 {
-    char tmp[FORMAT_MAX];
-    snprintf(tmp, FORMAT_MAX, "Warn: %s", format);
     va_list vars;
     va_start(vars, format);
-    vprintf(tmp, vars);
+    char buf[FORMAT_MAX];
+    vsprintf(buf, format, vars);
+    SDL_Log("Warn: %s", buf);
     va_end(vars);
 }
 static int main_init(void)
@@ -115,6 +117,31 @@ static int main_init(void)
     if (-1 == TTF_Init()) {
         Error("Init TTF: %s\n", TTF_GetError());
         return 1;
+    }
+    SDL_DisplayMode display_mode;
+    if (0 == SDL_GetCurrentDisplayMode(0, &display_mode)) {
+        WIDTH = display_mode.w;
+        HEIGHT = display_mode.h;
+        /* 如果这是电脑，简单判断吧:)，因为电脑的w>h */
+        if (WIDTH > HEIGHT) {
+            WIDTH = 2*PADDING+(WNGRIDS-1)*(AGRID_EDGE+LINE_WIDTH)+AGRID_EDGE;
+            HEIGHT = 2*PADDING+(HNGRIDS-1)*(AGRID_EDGE+LINE_WIDTH)+AGRID_EDGE;
+        } else {
+            /* 根据分辨率调整相应数据 */
+            int l1, l2;
+            l1 = WIDTH / ((WNGRIDS-1)*9+12);
+            l2 = HEIGHT / ((HNGRIDS-1)*9+12);
+            LINE_WIDTH = MIN(l1, l2);
+            PADDING = 2*LINE_WIDTH;
+            int agrid_edge1, agrid_edge2;
+            agrid_edge1 = (WIDTH-2*PADDING-(WNGRIDS-1)*LINE_WIDTH)/WNGRIDS;
+            agrid_edge2 = (HEIGHT-2*PADDING-(HNGRIDS-1)*LINE_WIDTH)/HNGRIDS;
+            AGRID_EDGE = MIN(agrid_edge1, agrid_edge2);
+            WIDTH = 2*PADDING+(WNGRIDS-1)*(AGRID_EDGE+LINE_WIDTH)+AGRID_EDGE;
+            HEIGHT = 2*PADDING+(HNGRIDS-1)*(AGRID_EDGE+LINE_WIDTH)+AGRID_EDGE;
+        }
+    } else {
+        Warn("Get Current Display Mode: %s\n", SDL_GetError());
     }
     win = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     renderer = win_getrenderer(win);
@@ -247,57 +274,11 @@ static void render_num(SDL_Renderer *renderer, int num, int row, int col)
 }
 static void render_gamewin(SDL_Renderer *renderer)
 {
-    /*
-    SDL_Color backup;
-    SDL_Color shadow = {0xff, 0xff, 0xff, 0x11};
-    SDL_Color fontcolor = {0x00, 0x00, 0x00, 0xff};
-    SDL_GetRenderDrawColor(renderer, &backup.r, &backup.g, &backup.b, &backup.a);
-    SDL_SetRenderDrawColor(renderer, shadow.r, shadow.g, shadow.b, shadow.a);
-    SDL_Rect fullwin = {0, 0, WIDTH, HEIGHT};
-    SDL_RenderFillRect(renderer, &fullwin);
-
-    char const *str = "恭喜胜利!";
-    SDL_Surface *tmp;
-    SDL_Texture *text;
-    int textw, texth;
-
-    tmp = TTF_RenderUTF8_Blended(mainfont, str, fontcolor);
-    text = SDL_CreateTextureFromSurface(renderer, tmp);
-    SDL_QueryTexture(text, NULL, NULL, &textw, &texth);
-    SDL_Rect textdst = {(WIDTH-textw)/2, (HEIGHT-texth)/2, textw, texth};
-    SDL_RenderCopy(renderer, text, NULL, &textdst);
-
-    SDL_FreeSurface(tmp);
-    SDL_DestroyTexture(text);
-    SDL_SetRenderDrawColor(renderer, backup.r, backup.g, backup.b, backup.a);
-    */
+    (void)renderer;
 }
 static void render_gameover(SDL_Renderer *renderer)
 {
-    /*
-    SDL_Color backup;
-    SDL_Color shadow = {0xff, 0xff, 0xff, 0x00};
-    SDL_Color fontcolor = {0x00, 0x00, 0x00, 0xff};
-    SDL_GetRenderDrawColor(renderer, &backup.r, &backup.g, &backup.b, &backup.a);
-    SDL_SetRenderDrawColor(renderer, shadow.r, shadow.g, shadow.b, shadow.a);
-    SDL_Rect fullwin = {0, 0, WIDTH, HEIGHT};
-    SDL_RenderFillRect(renderer, &fullwin);
-
-    char const *str = "你失败了!";
-    SDL_Surface *tmp;
-    SDL_Texture *text;
-    int textw, texth;
-
-    tmp = TTF_RenderUTF8_Blended(mainfont, str, fontcolor);
-    text = SDL_CreateTextureFromSurface(renderer, tmp);
-    SDL_QueryTexture(text, NULL, NULL, &textw, &texth);
-    SDL_Rect textdst = {(WIDTH-textw)/2, (HEIGHT-texth)/2, textw, texth};
-    SDL_RenderCopy(renderer, text, NULL, &textdst);
-
-    SDL_FreeSurface(tmp);
-    SDL_DestroyTexture(text);
-    SDL_SetRenderDrawColor(renderer, backup.r, backup.g, backup.b, backup.a);
-    */
+    (void)renderer;
 }
 static void render_mark(SDL_Renderer *renderer, mark_t mark, int row, int col)
 {
