@@ -61,7 +61,7 @@ static void render_agrid(SDL_Renderer *renderer, map_t *map, int row, int col);
 int main(int argc, char **argv)
 {
     if ( (2 == argc) && !strcmp("-h", argv[1])) {
-        printf("%s: v%s (GPL v3) leetking <li_Tking@163.com>\n", argv[0], VERSION);
+        printf("%s: v%s (GPL v3) leetking <li_tking@163.com>\n", argv[0], VERSION);
         return 0;
     }
     main_init();
@@ -94,7 +94,7 @@ static void Error(char const *format, ...)
     va_list vars;
     va_start(vars, format);
     char buf[FORMAT_MAX];
-    vsprintf_s(buf, FORMAT_MAX, format, vars);
+    vsnprintf(buf, FORMAT_MAX, format, vars);
     SDL_Log("Error: %s", buf);
     va_end(vars);
 }
@@ -103,7 +103,7 @@ static void Warn(char const *format, ...)
     va_list vars;
     va_start(vars, format);
     char buf[FORMAT_MAX];
-    vsprintf_s(buf, FORMAT_MAX, format, vars);
+    vsnprintf(buf, FORMAT_MAX, format, vars);
     SDL_Log("Warn: %s", buf);
     va_end(vars);
 }
@@ -153,6 +153,8 @@ static int main_init(void)
 
     return 0;
 }
+
+
 static int main_quit(void)
 {
     TTF_CloseFont(mainfont);
@@ -165,6 +167,7 @@ static int main_quit(void)
     SDL_Quit();
     return 0;
 }
+
 
 static SDL_Renderer *win_getrenderer(SDL_Window *win)
 {
@@ -187,6 +190,8 @@ static SDL_Renderer *win_getrenderer(SDL_Window *win)
 
     return ret;
 }
+
+
 static int pixelpos2gridpos(int pxielx, int pxiely, int *row, int *col)
 {
     if (pxielx < PADDING || pxiely < PADDING) return 1;
@@ -200,6 +205,8 @@ static int pixelpos2gridpos(int pxielx, int pxiely, int *row, int *col)
     if (AGRID_EDGE < pxielx%(AGRID_EDGE+LINE_WIDTH)) return 1;
     return 0;
 }
+
+
 
 static void render_map(SDL_Renderer *renderer, map_t *map)
 {
@@ -217,6 +224,8 @@ static void render_map(SDL_Renderer *renderer, map_t *map)
     }
     SDL_SetRenderDrawColor(renderer, r, g, b, a);
 }
+
+
 static void main_render(SDL_Renderer *renderer)
 {
     render_map(renderer, map);
@@ -232,6 +241,8 @@ static void main_render(SDL_Renderer *renderer)
 
     SDL_RenderPresent(renderer);
 }
+
+
 static void main_processevents()
 {
     SDL_Event e;
@@ -246,6 +257,8 @@ static void main_processevents()
         }
     }
 }
+
+
 static void render_num(SDL_Renderer *renderer, int num, int row, int col)
 {
     SDL_Rect numtextures[] = {
@@ -272,14 +285,21 @@ static void render_num(SDL_Renderer *renderer, int num, int row, int col)
     };
     SDL_RenderCopy(renderer, sprites, &numtextures[num], &dst);
 }
+
+
 static void render_gamewin(SDL_Renderer *renderer)
 {
     (void)renderer;
 }
+
+
 static void render_gameover(SDL_Renderer *renderer)
 {
     (void)renderer;
 }
+
+
+
 static void render_mark(SDL_Renderer *renderer, mark_t mark, int row, int col)
 {
     int x, y;
@@ -303,6 +323,8 @@ static void render_mark(SDL_Renderer *renderer, mark_t mark, int row, int col)
     };
     SDL_RenderCopy(renderer, sprites, &src, &dst);
 }
+
+
 static void render_agrid(SDL_Renderer *renderer, map_t *map, int row, int col)
 {
     SDL_Rect grid = {
@@ -322,6 +344,8 @@ static void render_agrid(SDL_Renderer *renderer, map_t *map, int row, int col)
         render_mark(renderer, map->grids[row][col].mark, row, col);
     }
 }
+
+
 static void main_status_machine(SDL_Event e)
 {
     int row, col;

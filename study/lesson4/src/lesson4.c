@@ -2,13 +2,35 @@
 #include <time.h>
 #include <stdlib.h>
 #include <math.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include "timer.h"
+
 #include "dot.h"
 #include "setting.h"
 
-#define DOTS_MAX    3
+
+#define randf()         (rand()/(double)RAND_MAX)
+#define ABS(x)          ((x)>0? (x): -(x))
+#define MIN(x, y)       ((x)>(y)? (y): (x))
+#define MAX(x, y)       ((x)>(y)? (x): (y))
+
+
+#define DOTS_MAX    7
+
+
+typedef struct transfer_t {
+    double a, b, c, d;
+} transfer_t;
+
+typedef struct line_t {
+    double x1, y1;
+    double x2, y2;
+} line_t;
+
+typedef struct game_state_t {
+    signed char quit, pause;
+} game_state_t;
 
 static SDL_Window *win;
 static SDL_Renderer *renderer;
@@ -16,27 +38,29 @@ static Dot *dots[DOTS_MAX];
 
 static int main_init(void);
 static void main_quit(void);
-static void main_render(SDL_Renderer *renderer);
-static void main_run();
+static void main_update(int ms);
+static void main_render(void);
 static SDL_Texture *load_texture(char const *path);
-static void main_collide(void);
+static void main_collide(int ms);
+
 
 static int main_init(void)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
-    win = SDL_CreateWindow("lesson 4 - move dot", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    win = SDL_CreateWindow("lesson 4 - move dot",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
     if (!win) {
         printf("Create win: %s\n", SDL_GetError());
         return 1;
     }
+
     renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         printf("Create renderer: %s\n", SDL_GetError());
         return 1;
     }
-    /* 设置默认render颜色 */
-    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         printf("Init image: %s\n", IMG_GetError());
         return 1;
@@ -44,6 +68,8 @@ static int main_init(void)
 
     return 0;
 }
+
+
 static void main_quit(void)
 {
     for (int i = 0; i < DOTS_MAX; ++i) {
@@ -54,121 +80,156 @@ static void main_quit(void)
     IMG_Quit();
     SDL_Quit();
 }
-static void main_render(SDL_Renderer *renderer)
+
+
+static void main_render(void)
 {
+    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
     SDL_RenderClear(renderer);
     for (int i = 0; i < DOTS_MAX; ++i) {
-        dot_show(dots[i], renderer);
+        dot_render(dots[i], renderer);
     }
     SDL_RenderPresent(renderer);
 }
-static void main_run()
+
+
+static void main_update(int ms)
 {
+    main_collide(ms);
     for (int i = 0; i < DOTS_MAX; ++i) {
-        dot_move(dots[i]);
+        dot_move(dots[i], ms);
     }
-    main_collide();
 }
+
+
 static SDL_Texture *load_texture(char const *path)
 {
-    SDL_Surface *pic;
-    pic = SDL_LoadBMP(path);
-    if (!pic) {
-        printf("Load Bmp(%s): %s\n", path, SDL_GetError());
-        return NULL;
-    }
-    SDL_SetColorKey(pic, SDL_TRUE, SDL_MapRGB(pic->format, 0xff, 0xff, 0xff));
-    SDL_Texture *ret;
-    ret = SDL_CreateTextureFromSurface(renderer, pic);
-    if (!ret) {
-        printf("Create texutre(%s): %s\n", path, SDL_GetError());
-    }
-    return ret;
+    return IMG_LoadTexture(renderer, path);
 }
-static void main_collide(void)
+
+
+static void transfer(transfer_t const *T,
+        double x1, double y1, double *x2, double *y2)
 {
-    /* TODO 碰撞检测有问题! */
-#define POW(x)  ((x)*(x))
-    for (int i = 0; i < DOTS_MAX; ++i) {
-        for (int j = i+1; j < DOTS_MAX; ++j) {
-            if ( (POW(dots[i]->x - dots[j]->x) + POW(dots[i]->y - dots[j]->y))
-                    < POW(dots[i]->w)) {
-                double dvi = sqrt(POW(dots[i]->vx) + POW(dots[i]->vy));
-                double dvj = sqrt(POW(dots[j]->vx) + POW(dots[j]->vy));
-                double vjx_1 = dvi/dvj*dots[j]->vx;
-                double vjy_1 = dvi/dvj*dots[j]->vy;
-                double vx = (dots[i]->vx/2 + vjx_1/2);
-                double vy = (dots[i]->vy/2 + vjy_1/2);
-                double dv2 = vx*vx + vy*vy;
-                double sinx2 = vx*vx/dv2;
-                double cosx2 = vy*vy/dv2;
-                double sinxcosx = vx*vy/dv2;
-                double a = dots[i]->vx;
-                double b = dots[i]->vy;
-                dots[i]->vx =  a*sinx2 - 2*b*sinxcosx - a*cosx2;
-                dots[i]->vy = -b*sinx2 - 2*a*sinxcosx + b*cosx2;
-                a = dots[j]->vx;
-                b = dots[j]->vy;
-                dots[j]->vx =  a*sinx2 - 2*b*sinxcosx - a*cosx2;
-                dots[j]->vy = -b*sinx2 - 2*a*sinxcosx + b*cosx2;
+    *x2 = T->a * x1 + T->b * y1;
+    *y2 = T->c * x1 + T->d * y1;
+}
+
+
+static void main_collide(int _ms)
+{
+    struct {
+        double x, y;
+        double vx, vy;
+    } nexts[DOTS_MAX];
+
+    /* 解决穿墙的问题：
+     * 一个物体很好解决
+     * 多个物体呢，碰撞边界是直角型如何解决？
+     */
+    for (double ms = _ms, t = _ms; ms > 0; ms -= t) {
+        for (int i = 0; i < DOTS_MAX; ++i) {
+            nexts[i].x = dots[i]->x;
+            nexts[i].y = dots[i]->y;
+            nexts[i].vx = dots[i]->vx;
+            nexts[i].vy = dots[i]->vy;
+        }
+
+        t = ms;
+        for (int i = 0; i < DOTS_MAX; ++i) {
+            double x0, y0, x1, y1;
+            x0 = dots[i]->x;
+            y0 = dots[i]->y;
+            dot_next_pos(dots[i], ms, &x1, &y1);
+            if (!(dots[i]->r <= x1 && x1 <= WINDOW_WIDTH-dots[i]->r)) {
+                double dx = MIN(x0, WINDOW_WIDTH - x0) - dots[i]->r;
+                ms = dx/ABS(dots[i]->vx);
+                nexts[i].x = (dots[i]->vx <= 0)?
+                    dots[i]->r: WINDOW_WIDTH-dots[i]->r;
+                nexts[i].y += dots[i]->vy * ms;
+                nexts[i].vx = -dots[i]->vx;
+                nexts[i].vy = -dots[i]->vy;
+            }
+            if (!(dots[i]->r <= y1 && y1 <= WINDOW_HEIGHT-dots[i]->r)) {
             }
         }
+
+        for (int i = 0; i < DOTS_MAX; ++i) {
+            dots[i]->x = nexts[i].x;
+            dots[i]->y = nexts[i].y;
+            dots[i]->vx = nexts[i].vx;
+            dots[i]->vy = nexts[i].vy;
+        }
     }
-#undef pow
+
+    /* TODO 解决小球碰撞问题 */
 }
+
+
+static int process_event(game_state_t *s)
+{
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        switch (e.type) {
+        case SDL_QUIT:
+            s->quit = 1;
+            break;
+        case SDL_KEYDOWN:
+            if (e.key.keysym.sym == SDLK_SPACE)
+                s->pause = !s->pause;
+            break;
+        }
+    }
+
+    return s->quit;
+}
+
 
 int main(int argc, char **argv)
 {
+    game_state_t state;
     main_init();
-    Timer fps, update;
-    Timer spf;
-    long frame = 0;
 
     srand((unsigned int)(time(NULL)+clock()));
+    /* initialize dots */
     for (int i = 0; i < DOTS_MAX; ++i) {
-        /* init dot */
         dots[i] = dot_new(load_texture("imgs/dot.bmp"));
-        dots[i]->x = rand()%SCREEN_WIDTH;
-        dots[i]->y = rand()%SCREEN_HEIGHT;
+        dots[i]->x = randf() * (WINDOW_WIDTH - dots[i]->r) + dots[i]->r/2.0;
+        dots[i]->y = randf() * (WINDOW_HEIGHT - dots[i]->r) + dots[i]->r/2.0;
         dots[i]->vx = ((rand()%(2*MAX_V)) - MAX_V);
         dots[i]->vy = ((rand()%(2*MAX_V)) - MAX_V);
     }
 
-    Timer_start(&fps);
-    Timer_start(&update);
+    int fps = 0;
+    int last = SDL_GetTicks();
+    state.quit = state.pause = 0;
+    main_render();
+    while (!state.quit) {
+        int t0 = SDL_GetTicks();
+        process_event(&state);
+        if (!state.pause) {
+            main_update(1000.0/FPS);
+        }
+        main_render();
+        ++fps;
+        int t1 = SDL_GetTicks();
 
-    int isquit = 0;
-    int ispause = 0;
-    while (!isquit) {
-        Timer_restart(&spf);
-        SDL_Event e;
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) isquit = 1;
-            if ( (e.type == SDL_KEYDOWN) && (e.key.keysym.sym == SDLK_SPACE)) {
-                ispause = !ispause;
-            }
+        /* 1 second */
+        if (t1-last >= 1000) {
+            char fps_str[512];
+            sprintf(fps_str, "fps: %d", fps);
+            SDL_SetWindowTitle(win, fps_str);
+            SDL_Log("fps: %d\n", fps);
+
+            fps = 0;
+            last = t1;
         }
 
-        if (!ispause) {
-            main_run();
-            main_render(renderer);
-        }
-
-        if (Timer_getticks(&update) > 1000) {
-            char title[512];
-            snprintf(title, sizeof(title), "fps: %.2f", frame / (Timer_getticks(&fps)/1000.0));
-            SDL_SetWindowTitle(win, title);
-            Timer_restart(&update);
-        }
-        ++frame;
-        int sleeptime = (1000.0/FPS - Timer_getticks(&spf));
-        if (sleeptime > 0) {
-            SDL_Delay(sleeptime);
-        }
+        if (1000.0/FPS > t1-t0)
+            SDL_Delay(1000.0/FPS - (t1-t0));
     }
+    /* Another game loop: https://gpp.tkchu.me/game-loop.html */
 
     main_quit();
     return 0;
 }
-
-

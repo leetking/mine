@@ -16,9 +16,8 @@ map_t *map_create(int w, int h, int nmine)
     map->closedgrids = w*h;
     map->nmine = MIN(w*h, nmine);
     map->grids = malloc(map->h * sizeof(agrid_t*));
-    for (i = 0; i < map->h; ++i) {
+    for (i = 0; i < map->h; ++i)
         map->grids[i] = malloc(map->w * sizeof(agrid_t));
-    }
 
     nmine_ = map->nmine;
     for (i = 0; i < map->h; ++i) {
@@ -35,10 +34,11 @@ map_t *map_create(int w, int h, int nmine)
     for (i = 0; i < map->h; ++i) {
         for (j = 0; j < map->w; ++j) {
             agrid_t g;
-            int row, col;
+            int row, col, r;
+            r = rand() % (map->w * (map->h - i) - j) + map->w * i + j;
+            row = r / map->h;
+            col = r % map->w;
             g = map->grids[i][j];
-            row = rand() % (map->h);
-            col = rand() % (map->w);
             map->grids[i][j] = map->grids[row][col];
             map->grids[row][col] = g;
         }
@@ -69,6 +69,8 @@ map_t *map_create(int w, int h, int nmine)
 
     return map;
 }
+
+
 /*
  * 按MARK_EMPTY(0)、MARK_FLAG(1)和MARK_MAYBE(2)顺序切换这三个标记
  * @return: 返回切换后的标记
@@ -79,6 +81,8 @@ mark_t map_mark(map_t *map, int row, int col)
     map->grids[row][col].mark %= 3;
     return map->grids[row][col].mark;
 }
+
+
 /*
  * 打开这个没有开的格子，查看是否有雷
  * @reutrn: 0: 没有雷
@@ -151,6 +155,8 @@ int map_open(map_t *map, int row, int col)
 #undef IS_IN_MAP
     return 0;
 }
+
+
 /*
  * 获取这个格子周围的地雷数
  * @return: 地雷数
@@ -159,6 +165,8 @@ int map_getnmines(map_t *map, int row, int col)
 {
     return map->grids[row][col].nmine;
 }
+
+
 void map_destroy(map_t *map)
 {
     if (!map) return;

@@ -1,5 +1,5 @@
-APP := mine
-VER := 0.0.1
+APP := test
+VER :=
 # 不立即展开 $(APP) 和 $(VER)
 PKG = $(APP)-$(VER)
 
@@ -10,7 +10,7 @@ RM := rm -rf
 CP := cp -r
 MKDIR := mkdir -p
 
-SRCS := $(sort $(wildcard src/*.c))
+SRCS := $(sort $(wildcard *.c) $(filter-out %main.c, $(wildcard ../src/*.c)))
 DEPS := $(SRCS:.c=.c.d)
 OBJS := $(SRCS:.c=.c.o)
 
@@ -34,6 +34,11 @@ CFLAGS  += $(CFLAGS_RELEASE)
 LDFLAGS += $(LDFLAGS_RELEASE)
 endif
 
+run: $(APP)
+	@echo "run test case $(APP)"
+	@echo "**Test report is shown below**"
+	@./$(APP)
+
 $(APP): $(OBJS)
 	@$(CC) -o $@ $^ $(LDFLAGS)
 	@echo "GEN $@"
@@ -50,18 +55,13 @@ define rm
 
 endef
 
-test:
-	@make -C test/
-
 clean:
 	$(foreach f,$(sort $(OBJS) $(APP)),$(call rm,$(f)))
-	@make -C test/ clean
 
 distclean: clean
 	$(foreach f,$(sort $(DEPS)),$(call rm,$(f)))
 	$(call rm,"compile_commands.json")
-	@make -C test/ distclean
 
 tar:
 
-.PHONY: clean distclean tar test
+.PHONY: clean distclean tar
