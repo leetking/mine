@@ -94,7 +94,7 @@ static void Error(char const *format, ...)
     va_list vars;
     va_start(vars, format);
     char buf[FORMAT_MAX];
-    vsprintf(buf, format, vars);
+    vsprintf_s(buf, FORMAT_MAX, format, vars);
     SDL_Log("Error: %s", buf);
     va_end(vars);
 }
@@ -103,7 +103,7 @@ static void Warn(char const *format, ...)
     va_list vars;
     va_start(vars, format);
     char buf[FORMAT_MAX];
-    vsprintf(buf, format, vars);
+    vsprintf_s(buf, FORMAT_MAX, format, vars);
     SDL_Log("Warn: %s", buf);
     va_end(vars);
 }
@@ -265,10 +265,10 @@ static void render_num(SDL_Renderer *renderer, int num, int row, int col)
     y = PADDING+row*(AGRID_EDGE+LINE_WIDTH);
     double scale = 0.8*(double)AGRID_EDGE/MAX(num_.w, num_.h);
     SDL_Rect dst = {
-        x+(AGRID_EDGE - scale*num_.w)/2,
-        y+(AGRID_EDGE - scale*num_.h)/2,
-        scale * num_.w,
-        scale * num_.h,
+        (int)(x+(AGRID_EDGE - scale*num_.w)/2),
+        (int)(y+(AGRID_EDGE - scale*num_.h)/2),
+        (int)(scale * num_.w),
+        (int)(scale * num_.h),
     };
     SDL_RenderCopy(renderer, sprites, &numtextures[num], &dst);
 }
@@ -296,10 +296,10 @@ static void render_mark(SDL_Renderer *renderer, mark_t mark, int row, int col)
     SDL_Rect src = marks[mark];
     double scale = (double)AGRID_EDGE/MAX(src.w, src.h);
     SDL_Rect dst = {
-        x+(AGRID_EDGE - scale*src.w)/2,
-        y+(AGRID_EDGE - scale*src.h)/2,
-        scale * src.w,
-        scale * src.h,
+        (int)(x+(AGRID_EDGE - scale*src.w)/2),
+        (int)(y+(AGRID_EDGE - scale*src.h)/2),
+        (int)(scale * src.w),
+        (int)(scale * src.h),
     };
     SDL_RenderCopy(renderer, sprites, &src, &dst);
 }

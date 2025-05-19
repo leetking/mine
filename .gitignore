@@ -3,8 +3,10 @@
 *.d
 *.swp
 *~
+*.exe
 core
 mine
 test-v*
+.xmake/
 obsolete/
 build/

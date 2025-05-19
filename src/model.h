@@ -1,5 +1,5 @@
-#ifndef MODEL_H__
-#define MODEL_H__
+#ifndef MODEL_H_
+#define MODEL_H_
 
 typedef struct map_t map_t;
 typedef struct agrid_t agrid_t;

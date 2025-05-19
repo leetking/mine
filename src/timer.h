@@ -1,5 +1,5 @@
-#ifndef TIMER_H__
-#define TIMER_H__
+#ifndef TIMER_H_
+#define TIMER_H_
 
 /*
  * 简单的计时器
